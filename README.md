@@ -3,7 +3,7 @@ proglangs project
 
 to startup (windows):
 
-composer require install
+composer install
 
 cp .env.example .env
 
