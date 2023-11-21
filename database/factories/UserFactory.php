@@ -19,7 +19,7 @@ class UserFactory extends Factory
     {
         return [
             'name' => fake()->name(),
-            'phone' => fake()->phoneNumber(),
+            'phone' => '09'.(string)mt_rand(10000000, 99999999),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password

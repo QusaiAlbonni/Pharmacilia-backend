@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
+use Faker\Factory as FakerFactory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\product>
@@ -16,8 +18,22 @@ class ProductFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = FakerFactory::create('en_US');
+        $faker_ar = FakerFactory::create('ar_SA');
         return [
-            //
+            'scientific_name' => $faker->sentence(2),
+            'scientific_name_ar' => $faker->sentence(2),
+            'brand_name' => $faker->sentence(2),
+            'brand_name_ar' => $faker->sentence(2),
+            'category' => 'other',
+            'manufacturer' => $faker->company(),
+            'manufacturer_ar' => $faker_ar->company(),
+            'stock' => $faker->numberBetween(1, 1000),
+            'price' => $faker->randomFloat(2, 1, 100),
+            'expiration_date' => $faker->dateTimeBetween('now','+3 years'),
+            'description' => $faker->paragraph(),
+            'description_ar' => $faker->paragraph(),
+            'image' => null,
         ];
     }
 }
