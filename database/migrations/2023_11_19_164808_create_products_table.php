@@ -3,7 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+use App\Providers\GlobalVariablesServiceProvider as GlobalVariables;
 
 
 return new class extends Migration
@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('scientific_name_ar')->nullable();
             $table->string('brand_name');
             $table->string('brand_name_ar');
-            $table->enum('category', ['oral_use','external_use','injectable','Intravenous_fluids','vaccines_and_serums','sterilizers','other'])->default('other');
+            $table->enum('category', GlobalVariables::categories())->default('other');
             $table->string('manufacturer');
             $table->string('manufacturer_ar');
             $table->unsignedInteger('stock');
