@@ -33,7 +33,7 @@ class AuthController extends Controller
                     'status' => false,
                     'message' => 'validation error',
                     'errors' => $validateUser->errors()
-                ], 401);
+                ], 422);
             }
 
             $user = User::create([
@@ -67,7 +67,7 @@ class AuthController extends Controller
                 $request->all(),
                 [
                     'phone' => 'required|digits:10',
-                    'password' => 'required|min:8|confirmed'
+                    'password' => 'required|min:8'
                 ]
             );
 
@@ -76,7 +76,7 @@ class AuthController extends Controller
                     'status' => false,
                     'message' => 'validation error',
                     'errors' => $validateUser->errors()
-                ], 401);
+                ], 422);
             }
 
             if (!Auth::attempt($request->only(['phone', 'password']), true)) {

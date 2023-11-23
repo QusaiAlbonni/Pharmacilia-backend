@@ -5,14 +5,51 @@ namespace App\Http\Controllers\api\V1;
 use App\Models\product;
 use App\Http\Requests\StoreproductRequest;
 use App\Http\Requests\UpdateproductRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use App\Providers\AppServiceProvider;
+use App\Providers\AppServiceProvider as AppSP;
+use app\Providers\GlobalVariablesServiceProvider as GlobalVariables;
 
 class ProductController extends Controller
 {
+
+
+
+    public function getByCategory(Request $request)
+    {
+        $validator = Validator::make($request->only('category', 'start', 'limit'), [
+            'category' => 'required|in:' . implode(',', GlobalVariables::categories()),
+            'start' => 'required|integer|min:0',
+            'limit' => 'required|integer|min:1'
+        ]);
+        if ($validator->fails()) {
+            return AppSP::apiResponse('validation error', $validator->errors(), 'errors', false, 422);
+        }
+        try {
+            $products = product::where('category', $request->category)
+                ->offset($request->start)
+                ->limit($request->limit)
+                ->get();
+            if (count($products) != 0)
+                return AppSP::apiResponse(
+                    'retrieved items by category',
+                    $products,
+                    'products'
+                );
+            else
+                return AppSP::apiResponse('no results found', null, 'data', false, 404);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+            ], 500);
+        }
+    }
+
+
     /**
      * Display a listing of the resource.
      */
@@ -20,7 +57,7 @@ class ProductController extends Controller
     {
         try {
             $products = product::all();
-            return AppServiceProvider::apiResponse(
+            return AppSP::apiResponse(
                 'products retrieved',
                 $products,
                 'products'
@@ -57,7 +94,7 @@ class ProductController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => $th->getMessage(),
-                    'data'=>null
+                    'data' => null
                 ], 500);
             }
             unset($data['image']);
@@ -113,9 +150,8 @@ class ProductController extends Controller
                     'message' => 'Product deleted',
                     'product' => $prodData
                 ]);
-            }
-            else {
-                return AppServiceProvider::apiResponse('failed to delete', null, 'data', false, 500);
+            } else {
+                return AppSP::apiResponse('failed to delete', null, 'data', false, 500);
             }
         } catch (\Throwable $th) {
             return response()->json([

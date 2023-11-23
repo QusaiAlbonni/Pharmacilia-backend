@@ -20,8 +20,8 @@ use Illuminate\Support\Facades\Route;
 //AUTH SANCTUM GROUP HERE ARE ROUTES AFTER LOGIN
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::get('/v1/products/getbycat', [ProductController::class, 'getByCategory']);
     Route::get('/v1/products/{product}', [ProductController::class, 'show']);
-
 
     // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
     Route::middleware('admin')->group(function () {
