@@ -82,7 +82,7 @@ class AuthController extends Controller
             if (!Auth::attempt($request->only(['phone', 'password']), true)) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Email & Password does not match with our record.',
+                    'message' => 'Phone Number & Password does not match with our record.',
                 ], 401);
             }
 
@@ -102,7 +102,7 @@ class AuthController extends Controller
     }
     public function logout(Request $request)
     {
-        auth()->user()->currentAccessToken()->delete();
+        auth()->user()->tokens()->delete();
         return response()->json([
             'status'=>true,
             'message' => 'Logged out',
