@@ -33,7 +33,7 @@ class StoreproductRequest extends FormRequest
             'manufacturer' => 'required|string|max:50',
             'manufacturer_ar' => 'required|string|max:50',
             'stock' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0.01',
+            'price' => 'required|numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
             'expiration_date' => 'required|date|date_format:Y-m-d',
             'description' => 'nullable|string|max:1024',
             'description_ar' => 'nullable|string|max:1024',
