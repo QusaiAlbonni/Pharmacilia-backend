@@ -51,7 +51,7 @@ class StoreproductRequest extends FormRequest
     {
         return response()->json([
             'status' => false,
-            'message' => 'validation failed errors listed',
+            'message' => 'validation failed',
             'errors' => $validator->errors()
         ], 422);
     }

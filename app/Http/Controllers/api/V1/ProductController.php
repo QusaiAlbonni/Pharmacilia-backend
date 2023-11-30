@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Providers\AppServiceProvider as AppSP;
 use app\Providers\GlobalVariablesServiceProvider as GlobalVariables;
+use Carbon\Carbon;
 
 class ProductController extends Controller
 {
@@ -33,12 +34,18 @@ class ProductController extends Controller
                 ->offset($request->start)
                 ->limit($request->limit)
                 ->get();
-            if (count($products) != 0)
+            if (count($products) != 0){
+                if (auth()->user()->role = 'user') {
+                   $products = $products->reject(function($product){
+                        return Carbon::parse($product->expiration_date)->lessThan(Carbon::now());
+                    });
+                }
                 return AppSP::apiResponse(
                     'retrieved items by category',
                     $products,
                     'products'
                 );
+            }
             else
                 return AppSP::apiResponse('no results found', null, 'data', false, 404);
         } catch (\Throwable $th) {
@@ -113,6 +120,11 @@ class ProductController extends Controller
      */
     public function show(product $product)
     {
+        if (auth()->user()->role == 'user') {
+            if (Carbon::parse($product->expiration_date)->lessThan(Carbon::now())) {
+                return AppSP::apiResponse('not found',null,"data", false, 404);
+            }
+        }
         return response()->json([
             'status' => true,
             'message' => 'Item retrieved',
@@ -133,7 +145,29 @@ class ProductController extends Controller
      */
     public function update(UpdateproductRequest $request, product $product)
     {
-        //
+        $data = $request->validated();
+        if (isset($data['image'])) {
+            try {
+                $imagePath = $data['image']->store('ProductImages', 'public');
+                $image = Image::make(public_path("storage/{$imagePath}"))->fit(600, 600);
+                $image->save();
+            } catch (\Throwable $th) {
+                log::info('error', $th->getTrace());
+                return response()->json([
+                    'status' => false,
+                    'message' => $th->getMessage(),
+                    'data' => null
+                ], 500);
+            }
+            unset($data['image']);
+        }
+        $data['image'] = isset($imagePath) ? $imagePath : null;
+        $status = $product->update($data);
+        return response()->json([
+            'status' => $status,
+            'message' => 'Product updated',
+            'product' => $product
+        ]);
     }
 
     /**

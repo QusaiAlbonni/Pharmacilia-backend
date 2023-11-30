@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Contracts\Validation\Validator;
 
 class UpdateproductRequest extends FormRequest
 {
@@ -11,7 +13,7 @@ class UpdateproductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,7 +24,34 @@ class UpdateproductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'scientific_name' => 'nullable|string|max:50',
+            'scientific_name_ar' => 'nullable|string|max:50',
+            'brand_name' => 'required|string|max:50',
+            'brand_name_ar' => 'required|string|max:50',
+            'category' => 'required|string|in:oral_use,external_use,injectable,Intravenous_fluids,vaccines_and_serums,sterilizers,other',
+            'manufacturer' => 'required|string|max:50',
+            'manufacturer_ar' => 'required|string|max:50',
+            'stock' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
+            'expiration_date' => 'required|date|date_format:Y-m-d',
+            'description' => 'nullable|string|max:1024',
+            'description_ar' => 'nullable|string|max:1024',
+            'image' => 'nullable|image|mimes:png,jpeg,webp|max:2048'
         ];
+    }
+    // throw exception to be handled and sent as a json response (do not change if uneeded)
+    protected function failedValidation(Validator $validator)
+    {
+        throw new ValidationException($validator, $this->response($validator));
+    }
+
+    //response when validation fails
+    protected function response($validator)
+    {
+        return response()->json([
+            'status' => false,
+            'message' => 'validation failed',
+            'errors' => $validator->errors()
+        ], 422);
     }
 }
