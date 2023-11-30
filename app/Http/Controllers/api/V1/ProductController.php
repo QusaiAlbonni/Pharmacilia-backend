@@ -31,22 +31,19 @@ class ProductController extends Controller
         }
         try {
             $products = product::where('category', $request->category)
+                ->when(auth()->user()->role == 'user', function ($query) {
+                    $query->where('expiration_date', '>', now());
+                })
                 ->offset($request->start)
                 ->limit($request->limit)
                 ->get();
-            if (count($products) != 0){
-                if (auth()->user()->role = 'user') {
-                   $products = $products->reject(function($product){
-                        return Carbon::parse($product->expiration_date)->lessThan(Carbon::now());
-                    });
-                }
+            if (count($products) != 0) {
                 return AppSP::apiResponse(
                     'retrieved items by category',
                     $products,
                     'products'
                 );
-            }
-            else
+            } else
                 return AppSP::apiResponse('no results found', null, 'data', false, 404);
         } catch (\Throwable $th) {
             return response()->json([
@@ -122,7 +119,7 @@ class ProductController extends Controller
     {
         if (auth()->user()->role == 'user') {
             if (Carbon::parse($product->expiration_date)->lessThan(Carbon::now())) {
-                return AppSP::apiResponse('not found',null,"data", false, 404);
+                return AppSP::apiResponse('not found', null, "data", false, 404);
             }
         }
         return response()->json([
