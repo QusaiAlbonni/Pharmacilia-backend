@@ -9,4 +9,10 @@ class product extends Model
 {
     use HasFactory;
     protected $guarded = ['id'];
+    protected $hidden = ['pivot'];
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class)->withPivot('quantity');
+    }
 }

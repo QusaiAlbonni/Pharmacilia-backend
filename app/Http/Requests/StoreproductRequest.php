@@ -6,6 +6,7 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\ValidationException;
+use App\Providers\GlobalVariablesServiceProvider as GlobalVariables;
 
 class StoreproductRequest extends FormRequest
 {
@@ -29,7 +30,7 @@ class StoreproductRequest extends FormRequest
             'scientific_name_ar' => 'nullable|string|max:50',
             'brand_name' => 'required|string|max:50',
             'brand_name_ar' => 'required|string|max:50',
-            'category' => 'required|string|in:oral_use,external_use,injectable,Intravenous_fluids,vaccines_and_serums,sterilizers,other',
+            'category' => 'required|string|in:' . implode(',', GlobalVariables::categories()),
             'manufacturer' => 'required|string|max:50',
             'manufacturer_ar' => 'required|string|max:50',
             'stock' => 'required|integer|min:1',

@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 class GlobalVariablesServiceProvider extends ServiceProvider
 {
 
-    protected static $categories = [
+    protected const categories = [
         'oral_use',
         'external_use',
         'injectable',
@@ -16,14 +16,23 @@ class GlobalVariablesServiceProvider extends ServiceProvider
         'sterilizers',
         'other'
     ];
+    protected const orderStatuses = [
+        'bending',
+        'sent',
+        'received'
+    ];
 
     /**
      * @var string $categories[]
-     * @return array $categories
+     * @return array categories
      */
     public static function categories(): array
     {
-        return self::$categories;
+        return self::categories;
+    }
+    public static function orderStatuses(): array
+    {
+        return self::orderStatuses;
     }
 
     /**

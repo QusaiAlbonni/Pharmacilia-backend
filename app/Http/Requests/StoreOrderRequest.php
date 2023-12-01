@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Models\product;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Validation\ValidationException;
 use App\Providers\GlobalVariablesServiceProvider as GlobalVariables;
+use Illuminate\Validation\Rule;
 
-class UpdateproductRequest extends FormRequest
+class StoreOrderRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,22 +28,22 @@ class UpdateproductRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'scientific_name' => 'nullable|string|max:50',
-            'scientific_name_ar' => 'nullable|string|max:50',
-            'brand_name' => 'required|string|max:50',
-            'brand_name_ar' => 'required|string|max:50',
-            'category' => 'required|string|in:' . implode(',', GlobalVariables::categories()),
-            'manufacturer' => 'required|string|max:50',
-            'manufacturer_ar' => 'required|string|max:50',
-            'stock' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0.01|regex:/^\d+(\.\d{1,2})?$/',
-            'expiration_date' => 'required|date|date_format:Y-m-d',
-            'description' => 'nullable|string|max:1024',
-            'description_ar' => 'nullable|string|max:1024',
-            'image' => 'nullable|image|mimes:png,jpeg,webp|max:2048'
+            'products' => 'required|array',
+            'products.*.product_id' => 'required|integer|min:1|exists:products,id|bail',
+            'products.*.quantity' => ['required', 'integer', 'min:1', 'max:1000', 'bail'],
+            'products.*' => function ($attribute, $value, $fail) {
+                $id = $value['product_id'];
+                $product = product::find($id);
+                if ($product === null) {
+                    $fail("product not found");
+                    return false;
+                }
+                if ($product->stock < (int)$value['quantity']) {
+                    $fail("the specified quantity for product with id {$id} is less than the available stock");
+                }
+            }
         ];
     }
-    // throw exception to be handled and sent as a json response (do not change if uneeded)
     protected function failedValidation(Validator $validator)
     {
         throw new ValidationException($validator, $this->response($validator));

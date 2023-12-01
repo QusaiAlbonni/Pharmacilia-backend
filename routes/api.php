@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\api\V1\AuthController;
+use App\Http\Controllers\api\V1\OrderController;
 use App\Http\Controllers\api\V1\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,11 @@ Route::middleware('api')->group(function () {
 
         Route::get('/v1/products/getbycat', [ProductController::class, 'getByCategory']);
         Route::get('/v1/products/{product}', [ProductController::class, 'show']);
+        Route::get('/v1/orders/{order}',[OrderController::class, 'show']);
+        Route::get('/v1/orders',[OrderController::class, 'index']);
+
+
+        
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
             Route::apiResource('/v1/products', ProductController::class)->except('show');
@@ -30,6 +36,7 @@ Route::middleware('api')->group(function () {
 
         // NORMAL USERS / PHARMACISTS routes (users with user ability on their sanctum token)
         Route::middleware('user')->group(function () {
+            Route::apiResource('/v1/orders', OrderController::class)->except('index', 'show', 'update');
         });
 
 
