@@ -21,14 +21,17 @@ use Illuminate\Support\Facades\Route;
 //AUTH SANCTUM GROUP HERE ARE ROUTES AFTER LOGIN
 Route::middleware('api')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
-
+        //show products bycategories
         Route::get('/v1/products/getbycat', [ProductController::class, 'getByCategory']);
-        Route::get('/v1/products/{product}', [ProductController::class, 'show']);
-        Route::get('/v1/orders/{order}',[OrderController::class, 'show']);
-        Route::get('/v1/orders',[OrderController::class, 'index']);
+        //Searching
+        Route::get('v1/products/search', [ProductController::class, 'search']);
+        //Show products byId
+        Route::get('/v1/products/{product}', [ProductController::class, 'getDetails']);
+        Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
+        Route::get('/v1/orders', [OrderController::class, 'index']);
 
 
-        
+
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
             Route::apiResource('/v1/products', ProductController::class)->except('show');

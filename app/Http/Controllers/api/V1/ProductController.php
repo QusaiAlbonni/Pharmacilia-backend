@@ -13,11 +13,21 @@ use Illuminate\Support\Facades\Storage;
 use App\Providers\AppServiceProvider as AppSP;
 use app\Providers\GlobalVariablesServiceProvider as GlobalVariables;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
+use PhpParser\Node\Expr\PostDec;
+use PhpParser\Node\Stmt\TryCatch;
+use Psy\Command\WhereamiCommand;
 
 class ProductController extends Controller
 {
 
 
+    /**
+     * Browse medications by classification.
+     *
+     * This feature enables pharmacists to view medications available in the warehouse
+     * based on their classification. They can browse through medications grouped by
+     */
 
     public function getByCategory(Request $request)
     {
@@ -52,7 +62,37 @@ class ProductController extends Controller
             ], 500);
         }
     }
+    /**
+     * Search
+     * This functionality allows pharmacists or warehouse owners to search for medications
+     * Based on drug_name,manufacturer or classification
+     */
+    public function search(Request $request)
+    {
+        $validator = Validator::make($request->only('search_text', 'category', 'start', 'limit'), [
+            'search_text' => 'string:in:brand_name,brand_name_ar,manufacturer,manufacturer_ar',
+            'category' => 'string:in:' . implode(',', GlobalVariables::categories()),
+            'start' => 'required|integer|min:0',
+            'limit' => 'required|integer|min:1'
+        ]);
+        if ($validator->fails()) {
+            return AppSP::apiResponse('validation error', $validator->errors(), 'errors', false, 422);
+        }
 
+        try {
+            $products = product::filter(request(['search_text', 'category']))->latest()->get();
+            if (count($products) != 0) {
+                return AppSP::apiResponse(
+                    'Item recieved',
+                    $products,
+                    'products'
+                );
+            } else
+                return AppSP::apiResponse('no results found', null, 'data', false, 404);
+        } catch (\Throwable $th) {
+            throw $th;
+        }
+    }
 
     /**
      * Display a listing of the resource.
@@ -113,10 +153,12 @@ class ProductController extends Controller
     }
 
     /**
-     * Display the specified resource.
+     * choose a specific drug to view.
+     *  detailed information.
      */
-    public function show(product $product)
+    public function getDetails(product $product)
     {
+
         if (auth()->user()->role == 'user') {
             if (Carbon::parse($product->expiration_date)->lessThan(Carbon::now())) {
                 return AppSP::apiResponse('not found', null, "data", false, 404);

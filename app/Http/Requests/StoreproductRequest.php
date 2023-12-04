@@ -8,6 +8,7 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\ValidationException;
 use App\Providers\GlobalVariablesServiceProvider as GlobalVariables;
 
+
 class StoreproductRequest extends FormRequest
 {
     /**
@@ -55,5 +56,7 @@ class StoreproductRequest extends FormRequest
             'message' => 'validation failed',
             'errors' => $validator->errors()
         ], 422);
+
+
     }
 }

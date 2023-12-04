@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Providers\AppServiceProvider as AppSP;
 
 class AuthController extends Controller
 {
@@ -29,11 +30,9 @@ class AuthController extends Controller
             );
 
             if ($validateUser->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'validation error',
-                    'errors' => $validateUser->errors()
-                ], 422);
+
+
+                return AppSP::apiResponse('validation error', $validateUser->errors(), 'errors', false, 422);
             }
 
             $user = User::create([
@@ -43,11 +42,7 @@ class AuthController extends Controller
                 'password' => Hash::make($request->password)
             ]);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'User Created Successfully',
-                'token' => $user->createToken("API TOKEN", ['user'])->plainTextToken
-            ], 200);
+            return AppSP::apiResponse('User Created Successfully', $user->createToken("API TOKEN", ['user'])->plainTextToken, 'token', true);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
@@ -72,11 +67,8 @@ class AuthController extends Controller
             );
 
             if ($validateUser->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'validation error',
-                    'errors' => $validateUser->errors()
-                ], 422);
+
+                return AppSP::apiResponse('validaion error', $validateUser->errors(), 'errors', false, 422);
             }
 
             if (!Auth::attempt($request->only(['phone', 'password']), true)) {
@@ -86,13 +78,9 @@ class AuthController extends Controller
                 ], 401);
             }
 
-            $user = User::where('phone', $request->phone)->first();
 
-            return response()->json([
-                'status' => true,
-                'message' => 'User Logged In Successfully',
-                'token' => $user->createToken("API TOKEN", [$user->role])->plainTextToken
-            ], 200);
+            $user = User::where('phone', $request->phone)->first();
+            return AppSP::apiResponse('User Logged In Successfully',$user->createToken("API TOKEN",[$user->role])->plainTextToken,'token');
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
@@ -104,8 +92,8 @@ class AuthController extends Controller
     {
         auth()->user()->tokens()->delete();
         return response()->json([
-            'status'=>true,
+            'status' => true,
             'message' => 'Logged out',
-           ]);
+        ]);
     }
 }
