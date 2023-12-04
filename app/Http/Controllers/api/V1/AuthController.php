@@ -80,13 +80,13 @@ class AuthController extends Controller
 
 
             $user = User::where('phone', $request->phone)->first();
-            return AppSP::apiResponse('User Logged In Successfully',$user->createToken("API TOKEN",[$user->role])->plainTextToken,'token');
-        } catch (\Throwable $th) {
-            return response()->json([
+            return AppSP::apiResponse('User Logged In Successfully', $user->createToken("API TOKEN", [$user->role])->plainTextToken, 'token');
+            } catch (\Throwable $th) {
+                return response()->json([
                 'status' => false,
                 'message' => $th->getMessage()
-            ], 500);
-        }
+                ], 500);
+                }
     }
     public function logout(Request $request)
     {

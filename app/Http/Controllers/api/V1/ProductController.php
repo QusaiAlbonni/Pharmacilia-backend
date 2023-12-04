@@ -80,7 +80,7 @@ class ProductController extends Controller
         }
 
         try {
-            $products = product::filter(request(['search_text', 'category']))->latest()->get();
+            $products = product::filter(request(['search_text', 'category']))->offset($request->start)->limit($request->limit)->get();
             if (count($products) != 0) {
                 return AppSP::apiResponse(
                     'Item recieved',
