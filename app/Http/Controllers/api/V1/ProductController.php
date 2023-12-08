@@ -22,17 +22,17 @@ class ProductController extends Controller
 {
 
 
+    
     /**
-     * Browse medications by classification.
-     *
-     * This feature enables pharmacists to view medications available in the warehouse
-     * based on their classification. They can browse through medications grouped by
+     * Search
+     * This functionality allows pharmacists or warehouse owners to search for medications
+     * Based on drug_name,manufacturer or classification
      */
-
-    public function getByCategory(Request $request)
+    public function search(Request $request)
     {
-        $validator = Validator::make($request->only('category', 'start', 'limit'), [
-            'category' => 'required|in:' . implode(',', GlobalVariables::categories()),
+        $validator = Validator::make($request->only('search_text', 'category', 'start', 'limit'), [
+            'category' => 'string|in:' . implode(',', GlobalVariables::categories()),
+            'search_text' => 'string',
             'start' => 'required|integer|min:0',
             'limit' => 'required|integer|min:1'
         ]);
@@ -40,16 +40,13 @@ class ProductController extends Controller
             return AppSP::apiResponse('validation error', $validator->errors(), 'errors', false, 422);
         }
         try {
-            $products = product::where('category', $request->category)
-                ->when(auth()->user()->role == 'user', function ($query) {
-                    $query->where('expiration_date', '>', now());
-                })
+            $products = product::latest()->filter(request(['search_text', 'category']))
                 ->offset($request->start)
                 ->limit($request->limit)
                 ->get();
             if (count($products) != 0) {
                 return AppSP::apiResponse(
-                    'retrieved items by category',
+                    'Item recieved',
                     $products,
                     'products'
                 );
@@ -60,37 +57,6 @@ class ProductController extends Controller
                 'status' => false,
                 'message' => $th->getMessage(),
             ], 500);
-        }
-    }
-    /**
-     * Search
-     * This functionality allows pharmacists or warehouse owners to search for medications
-     * Based on drug_name,manufacturer or classification
-     */
-    public function search(Request $request)
-    {
-        $validator = Validator::make($request->only('search_text', 'category', 'start', 'limit'), [
-            'search_text' => 'string:in:brand_name,brand_name_ar,manufacturer,manufacturer_ar',
-            'category' => 'string:in:' . implode(',', GlobalVariables::categories()),
-            'start' => 'required|integer|min:0',
-            'limit' => 'required|integer|min:1'
-        ]);
-        if ($validator->fails()) {
-            return AppSP::apiResponse('validation error', $validator->errors(), 'errors', false, 422);
-        }
-
-        try {
-            $products = product::filter(request(['search_text', 'category']))->offset($request->start)->limit($request->limit)->get();
-            if (count($products) != 0) {
-                return AppSP::apiResponse(
-                    'Item recieved',
-                    $products,
-                    'products'
-                );
-            } else
-                return AppSP::apiResponse('no results found', null, 'data', false, 404);
-        } catch (\Throwable $th) {
-            throw $th;
         }
     }
 
@@ -156,7 +122,7 @@ class ProductController extends Controller
      * choose a specific drug to view.
      *  detailed information.
      */
-    public function getDetails(product $product)
+    public function show(product $product)
     {
 
         if (auth()->user()->role == 'user') {

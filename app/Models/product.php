@@ -14,13 +14,15 @@ class product extends Model
 
     public function orders()
     {
-        return $this->belongsToMany(Order::class)->withPivot('quantity');}
+        return $this->belongsToMany(Order::class)->withPivot('quantity');
+    }
+
 
     public function scopeFilter($query, array $filters)
     {
-
-
-
+        $query->when(auth()->user()->role == 'user', function ($query) {
+            $query->where('expiration_date', '>', now());
+        });
         $query->when($filters['search_text'] ?? false, function ($query, $search) {
 
             $query
@@ -32,7 +34,7 @@ class product extends Model
         $query->when($filters['category'] ?? false, function ($query, $category) {
 
             $query
-                ->where('category', 'like', $category . "%");
+                ->where('category', 'like', $category);
         });
     }
 }
