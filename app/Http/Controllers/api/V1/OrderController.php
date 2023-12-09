@@ -93,6 +93,23 @@ class OrderController extends Controller
             );
         }
     }
+    public function send(Order $order){
+        if ($order->status != 'bending') {
+            return AppSP::apiResponse('order is not bending', null, 'data', false, 403);
+        }
+        $order->update(['status' => 'sent']);
+        return AppSP::apiResponse('order sent', $order, 'order');
+    }
+    public function receive(Order $order){
+        if ($order->status != 'sent') {
+            return AppSP::apiResponse('order is not sent', null, 'data', false, 403);
+        }
+        $order->update(['status' => 'received', 'payment_status' => 'paid']);
+        foreach ($order->products as $product) {
+            $product->increment('sales', $product->pivot->quantity);
+        }
+        return AppSP::apiResponse('order received', $order, 'order');
+    }
 
     /**
      * Show the form for editing the specified resource.

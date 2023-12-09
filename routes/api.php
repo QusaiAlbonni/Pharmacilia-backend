@@ -25,7 +25,7 @@ Route::middleware('api')->group(function () {
         Route::get('v1/products/search', [ProductController::class, 'search']);
         //Show products byId
         Route::get('/v1/products/{product}', [ProductController::class, 'show']);
-        
+
         Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
         Route::get('/v1/orders', [OrderController::class, 'index']);
         Route::get('/v1/products', [ProductController::class, 'index']);
@@ -35,6 +35,8 @@ Route::middleware('api')->group(function () {
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
             Route::apiResource('/v1/products', ProductController::class)->except('show', 'index');
+            Route::patch('/v1/orders/{order}/send', [OrderController::class, 'send']);
+            Route::patch('/v1/orders/{order}/receive', [OrderController::class, 'receive']);
         });
 
         // NORMAL USERS / PHARMACISTS routes (users with user ability on their sanctum token)

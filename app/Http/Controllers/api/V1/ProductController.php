@@ -185,6 +185,9 @@ class ProductController extends Controller
      */
     public function destroy(product $product)
     {
+        if ($product->orders()->count()) {
+            return AppSP::apiResponse('there are orders placed for this product',null, 'data', false, 403);
+        }
         try {
             $prodData = $product->toArray();
             $status = $product->delete();
