@@ -28,12 +28,13 @@ Route::middleware('api')->group(function () {
         
         Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
         Route::get('/v1/orders', [OrderController::class, 'index']);
+        Route::get('/v1/products', [ProductController::class, 'index']);
 
 
 
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
-            Route::apiResource('/v1/products', ProductController::class)->except('show');
+            Route::apiResource('/v1/products', ProductController::class)->except('show', 'index');
         });
 
         // NORMAL USERS / PHARMACISTS routes (users with user ability on their sanctum token)

@@ -22,7 +22,7 @@ class ProductController extends Controller
 {
 
 
-    
+
     /**
      * Search
      * This functionality allows pharmacists or warehouse owners to search for medications
@@ -66,7 +66,12 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = product::all();
+            $products = product::all()->when(
+                auth()->user()->role == 'user',
+                function ($query) {
+                    $query->where('expiration_date', '>', now());
+                }
+            );;
             return AppSP::apiResponse(
                 'products retrieved',
                 $products,
