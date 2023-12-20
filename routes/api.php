@@ -28,6 +28,8 @@ Route::middleware('api')->group(function () {
 
         Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
         Route::get('/v1/orders', [OrderController::class, 'index']);
+
+        Route::get('/v1/product/mostCommon',[ProductController::class,'common']);
         Route::get('/v1/products', [ProductController::class, 'index']);
 
 

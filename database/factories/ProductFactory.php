@@ -31,6 +31,7 @@ class ProductFactory extends Factory
             'manufacturer' => $faker->company(),
             'manufacturer_ar' => $faker_ar->company(),
             'stock' => $faker->numberBetween(1, 1000),
+            'sales'=>$faker->numberBetween(1,100),
             'price' => $faker->randomFloat(2, 1, 100),
             'expiration_date' => $faker->dateTimeBetween('now','+3 years'),
             'description' => $faker->paragraph(),

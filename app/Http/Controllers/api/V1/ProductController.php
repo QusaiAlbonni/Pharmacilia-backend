@@ -71,7 +71,7 @@ class ProductController extends Controller
                 function ($query) {
                     $query->where('expiration_date', '>', now());
                 }
-            );;
+            );
             return AppSP::apiResponse(
                 'products retrieved',
                 $products,
@@ -84,6 +84,24 @@ class ProductController extends Controller
                 'data' => null
             ], 500);
         }
+    }
+
+    public function common(){
+        try {
+            $products=product::latest()->orderBy('sales','desc')->get();
+
+                return AppSP::apiResponse(
+                    'Item recieved depending on most sales',
+                    $products,
+                    'products'
+                );
+         } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage(),
+                'data' => null
+            ], 500);
+     }
     }
 
     /**
