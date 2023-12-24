@@ -88,7 +88,7 @@ class ProductController extends Controller
 
     public function common(){
         try {
-            $products=product::latest()->orderBy('sales','desc')->get();
+            $products=product::orderBy('sales','desc')->get();
 
                 return AppSP::apiResponse(
                     'Item recieved depending on most sales',
