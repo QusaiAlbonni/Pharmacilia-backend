@@ -22,6 +22,10 @@ class product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function favoritedBy()
+    {
+        return $this->belongsToMany(User::class, 'product_user')->withTimestamps();
+    }
 
     public function scopeFilter($query, array $filters)
     {

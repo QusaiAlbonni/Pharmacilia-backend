@@ -3,6 +3,7 @@
 use App\Http\Controllers\api\V1\AuthController;
 use App\Http\Controllers\api\V1\BillController;
 use App\Http\Controllers\api\V1\CategoryController;
+use App\Http\Controllers\api\V1\FavoriteController;
 use App\Http\Controllers\api\V1\OrderController;
 use App\Http\Controllers\api\V1\ProductController;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ Route::middleware('api')->group(function () {
         //get all cats or one
         Route::apiResource('/v1/categories', CategoryController::class)->except('store', 'destroy');
 
-
+        Route::get('/v1/bills/{bill}', [BillController::class, 'show']);
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
             //add/delete/update prod
@@ -55,6 +56,10 @@ Route::middleware('api')->group(function () {
         Route::middleware('user')->group(function () {
             // add/delete an order
             Route::apiResource('/v1/orders', OrderController::class)->except('index', 'show', 'update');
+
+            Route::post('/v1/favorites/{product}', [FavoriteController::class, 'toggleFavorite']);
+            Route::get('/v1/favorites', [FavoriteController::class, 'index']);
+            Route::get('/v1/products/{product}/isfav', [FavoriteController::class, 'isFavorite']);
         });
         //show an order
         Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
