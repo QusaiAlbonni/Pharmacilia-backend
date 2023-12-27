@@ -66,12 +66,12 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = product::all()->when(
+            $products = product::latest()->when(
                 auth()->user()->role == 'user',
                 function ($query) {
                     $query->where('expiration_date', '>', now());
                 }
-            );
+            )->get();
             return AppSP::apiResponse(
                 'products retrieved',
                 $products,
@@ -88,7 +88,7 @@ class ProductController extends Controller
 
     public function common(){
         try {
-            $products=product::orderBy('sales','desc')->get();
+            $products=product::orderBy('sales','desc')->where('expiration_date', '>', now())->get();
 
                 return AppSP::apiResponse(
                     'Item recieved depending on most sales',
@@ -203,8 +203,8 @@ class ProductController extends Controller
      */
     public function destroy(product $product)
     {
-        if ($product->orders()->count()) {
-            return AppSP::apiResponse('there are orders placed for this product',null, 'data', false, 403);
+        if ($product->orders()->whereIn('status',['sent', 'pending'])->count()) {
+            return AppSP::apiResponse('there are pending or sending orders placed for this product',null, 'data', false, 403);
         }
         try {
             $prodData = $product->toArray();

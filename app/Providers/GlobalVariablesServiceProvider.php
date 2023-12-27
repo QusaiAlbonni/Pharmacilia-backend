@@ -17,7 +17,7 @@ class GlobalVariablesServiceProvider extends ServiceProvider
         'other'
     ];
     protected const orderStatuses = [
-        'bending',
+        'pending',
         'sent',
         'received'
     ];

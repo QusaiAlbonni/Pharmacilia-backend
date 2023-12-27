@@ -30,8 +30,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('description_ar')->nullable();
             $table->string('image')->nullable();
-
-
+            $table->softDeletes();
             $table->timestamps();
         });
     }

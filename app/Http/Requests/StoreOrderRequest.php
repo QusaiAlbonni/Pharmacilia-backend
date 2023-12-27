@@ -40,6 +40,7 @@ class StoreOrderRequest extends FormRequest
                 }
                 if ($product->stock < (int)$value['quantity']) {
                     $fail("the specified quantity for product with id {$id} is less than the available stock");
+                    return false;
                 }
             }
         ];

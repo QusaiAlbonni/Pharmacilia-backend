@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\api\V1;
 
 use App\Http\Requests\StoreOrderRequest;
+use App\Models\Bill;
 use App\Models\Order;
 use App\Models\product;
 use Illuminate\Http\Request;
@@ -21,7 +22,10 @@ class OrderController extends Controller
             $orders = Order::with(['user' => function ($query) {
                 $query->select('id', 'name', 'phone');
             }, 'products' => function ($query) {
-                $query->select('products.id', 'products.brand_name', 'products.brand_name_ar', 'quantity');
+                $query->select('products.id', 'products.brand_name', 'products.brand_name_ar', 'quantity', 'order_product.price');
+                $query->withTrashed();
+            }, 'bill' => function ($query) {
+                $query->select('id', 'total', 'paid', 'order_id');
             }]);
             if (auth()->user()->role == 'admin') {
                 $orders = $orders->get();
@@ -55,19 +59,38 @@ class OrderController extends Controller
         $products = $request->products;
         try {
             $order = auth()->user()->orders()->create();
-            $order->products()->attach($products, ['created_at' => now(), 'updated_at' => now()]);
+            foreach ($products as $product) {
+                $order->products()->attach($product['product_id'], [
+                    'created_at' => now(), 'updated_at' => now(),
+                    'product_id' => $product['product_id'],
+                    'quantity' => $product['quantity'],
+                    'price' => product::find($product['product_id'])->price
+                ]);
+            }
+
             foreach ($order->products as $product) {
                 $product->decrement('stock', $product->pivot->quantity);
             }
+
+            $products = $order->products;
+            $total = 0.0;
+            foreach ($products as $product) {
+                $total += $product->pivot->quantity * $product->pivot->price;
+            }
+            $bill = new Bill();
+            $bill->total = $total;
+            $order->bill()->save($bill);
+
             return AppSP::apiResponse('order added');
         } catch (\Throwable $th) {
-            return AppSP::apiResponse(
+            throw $th;
+            /*return AppSP::apiResponse(
                 $th->getMessage(),
                 null,
                 'data',
                 false,
                 500
-            );
+            );*/
         }
     }
 
@@ -80,7 +103,10 @@ class OrderController extends Controller
             $this->authorize('access', $order);
         try {
             $order = $order->load(['products' => function ($query) {
-                $query->select('products.id', 'products.brand_name', 'products.brand_name_ar', 'quantity');
+                $query->select('products.id', 'products.brand_name', 'products.brand_name_ar', 'quantity', 'order_product.price');
+                $query->withTrashed();
+            }, 'bill' => function ($query) {
+                $query->select('id', 'total', 'paid', 'order_id');
             }]);
             return AppSP::apiResponse('item retreived', $order, 'order');
         } catch (\Throwable $th) {
@@ -93,18 +119,22 @@ class OrderController extends Controller
             );
         }
     }
-    public function send(Order $order){
-        if ($order->status != 'bending') {
-            return AppSP::apiResponse('order is not bending', null, 'data', false, 403);
+    public function send(Order $order)
+    {
+        if ($order->status != 'pending') {
+            return AppSP::apiResponse('order is not pending', null, 'data', false, 403);
         }
-        $order->update(['status' => 'sent']);
+        $order->status = 'sent';
+        $order->save();
         return AppSP::apiResponse('order sent', $order, 'order');
     }
-    public function receive(Order $order){
+    public function receive(Order $order)
+    {
         if ($order->status != 'sent') {
             return AppSP::apiResponse('order is not sent', null, 'data', false, 403);
         }
-        $order->update(['status' => 'received', 'payment_status' => 'paid']);
+        $order->status = 'received';
+        $order->save();
         foreach ($order->products as $product) {
             $product->increment('sales', $product->pivot->quantity);
         }
@@ -133,7 +163,7 @@ class OrderController extends Controller
      */
     public function destroy(Order $order)
     {
-        if ($order->status !== 'bending') {
+        if ($order->status !== 'pending') {
             return AppSP::apiResponse(
                 'the order has been already proccessed cannot cancel',
                 null,

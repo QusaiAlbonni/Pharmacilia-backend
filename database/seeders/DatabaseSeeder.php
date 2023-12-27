@@ -20,5 +20,11 @@ class DatabaseSeeder extends Seeder
             'phone' => '0952375726',
             'role' => 'admin',
         ]);
+        \App\Models\User::factory()->create([
+            'name' => 'user',
+            'email' => 'user@gmail.com',
+            'phone' => '0953375726',
+            'role' => 'user',
+        ]);
     }
 }
