@@ -31,7 +31,7 @@ class ProductController extends Controller
     public function search(Request $request)
     {
         $validator = Validator::make($request->only('search_text', 'category', 'start', 'limit'), [
-            'category' => 'string|in:' . implode(',', GlobalVariables::categories()),
+            'category' => 'string|min:2|max:255',
             'search_text' => 'string',
             'start' => 'required|integer|min:0',
             'limit' => 'required|integer|min:1'
@@ -66,7 +66,9 @@ class ProductController extends Controller
     public function index()
     {
         try {
-            $products = product::latest()->when(
+            $products = product::latest()->with(['category' => function ($query) {
+                $query->withTrashed();
+            }])->when(
                 auth()->user()->role == 'user',
                 function ($query) {
                     $query->where('expiration_date', '>', now());
@@ -86,22 +88,25 @@ class ProductController extends Controller
         }
     }
 
-    public function common(){
+    public function common()
+    {
         try {
-            $products=product::orderBy('sales','desc')->where('expiration_date', '>', now())->get();
+            $products = product::orderBy('sales', 'desc')->with(['category' => function ($query) {
+                $query->withTrashed();
+            }])->where('expiration_date', '>', now())->get();
 
-                return AppSP::apiResponse(
-                    'Item recieved depending on most sales',
-                    $products,
-                    'products'
-                );
-         } catch (\Throwable $th) {
+            return AppSP::apiResponse(
+                'Item recieved depending on most sales',
+                $products,
+                'products'
+            );
+        } catch (\Throwable $th) {
             return response()->json([
                 'status' => false,
                 'message' => $th->getMessage(),
                 'data' => null
             ], 500);
-     }
+        }
     }
 
     /**
@@ -147,7 +152,9 @@ class ProductController extends Controller
      */
     public function show(product $product)
     {
-
+        $product = $product->load(['category' => function ($query) {
+            $query->withTrashed();
+        }]);
         if (auth()->user()->role == 'user') {
             if (Carbon::parse($product->expiration_date)->lessThan(Carbon::now())) {
                 return AppSP::apiResponse('not found', null, "data", false, 404);
@@ -203,8 +210,8 @@ class ProductController extends Controller
      */
     public function destroy(product $product)
     {
-        if ($product->orders()->whereIn('status',['sent', 'pending'])->count()) {
-            return AppSP::apiResponse('there are pending or sending orders placed for this product',null, 'data', false, 403);
+        if ($product->orders()->whereIn('status', ['sent', 'pending'])->count()) {
+            return AppSP::apiResponse('there are pending or sending orders placed for this product', null, 'data', false, 403);
         }
         try {
             $prodData = $product->toArray();

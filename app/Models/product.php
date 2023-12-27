@@ -18,6 +18,9 @@ class product extends Model
     {
         return $this->belongsToMany(Order::class)->withPivot('quantity');
     }
+    public function category(){
+        return $this->belongsTo(Category::class);
+    }
 
 
     public function scopeFilter($query, array $filters)
@@ -35,8 +38,10 @@ class product extends Model
         });
         $query->when($filters['category'] ?? false, function ($query, $category) {
 
-            $query
-                ->where('category', 'like', $category);
+            $query->whereHas('category', function ($categoryQuery) use ($category) {
+                $categoryQuery->withTrashed()->where('category_name', '=', $category);
+            });
         });
+        $query->with('category');
     }
 }

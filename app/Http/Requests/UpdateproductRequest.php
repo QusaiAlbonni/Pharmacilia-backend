@@ -29,7 +29,7 @@ class UpdateproductRequest extends FormRequest
             'scientific_name_ar' => 'nullable|string|max:50',
             'brand_name' => 'required|string|max:50',
             'brand_name_ar' => 'required|string|max:50',
-            'category' => 'required|string|in:' . implode(',', GlobalVariables::categories()),
+            'category_id' => 'required|string|exists:categories,id',
             'manufacturer' => 'required|string|max:50',
             'manufacturer_ar' => 'required|string|max:50',
             'stock' => 'required|integer|min:1',

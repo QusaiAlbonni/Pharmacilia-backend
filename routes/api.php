@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\api\V1\AuthController;
 use App\Http\Controllers\api\V1\BillController;
+use App\Http\Controllers\api\V1\CategoryController;
 use App\Http\Controllers\api\V1\OrderController;
 use App\Http\Controllers\api\V1\ProductController;
 use Illuminate\Http\Request;
@@ -28,28 +29,42 @@ Route::middleware('api')->group(function () {
         Route::get('/v1/products/{product}', [ProductController::class, 'show']);
 
         Route::get('/v1/product/mostCommon',[ProductController::class,'common']);
+        //all prods
         Route::get('/v1/products', [ProductController::class, 'index']);
-
+        //get all cats or one
+        Route::apiResource('/v1/categories', CategoryController::class)->except('store', 'destroy');
 
 
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
+            //add/delete/update prod
             Route::apiResource('/v1/products', ProductController::class)->except('show', 'index');
+            // pay bill (change from unpaid to paid)
             Route::patch('/v1/orders/{order}/bill/pay', [BillController::class, 'pay']);
+            // change order status to sent
             Route::patch('/v1/orders/{order}/send', [OrderController::class, 'send']);
+            // change order status to received
             Route::patch('/v1/orders/{order}/receive', [OrderController::class, 'receive']);
+            //add new cat
+            Route::post('/v1/categories', [CategoryController::class, 'store']);
+            //delete a cat
+            Route::delete('/v1/categories/{category}', [CategoryController::class, 'destroy']);
         });
-
+        Route::get('/v1/orders/filterstatus', [OrderController::class, 'filterbystatus']);
         // NORMAL USERS / PHARMACISTS routes (users with user ability on their sanctum token)
         Route::middleware('user')->group(function () {
+            // add/delete an order
             Route::apiResource('/v1/orders', OrderController::class)->except('index', 'show', 'update');
         });
+        //show an order
         Route::get('/v1/orders/{order}', [OrderController::class, 'show']);
+        //get all orders
         Route::get('/v1/orders', [OrderController::class, 'index']);
-
+        //get the current user info
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
+        //logout
         Route::post('v1/logout', [AuthController::class, 'logout']);
     });
 

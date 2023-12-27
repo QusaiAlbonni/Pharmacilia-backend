@@ -5,6 +5,7 @@ namespace App\Http\Controllers\api\V1;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Bill;
 use App\Models\Order;
+use Illuminate\Support\Facades\Validator;
 use App\Models\product;
 use Illuminate\Http\Request;
 use app\Providers\AppServiceProvider as AppSP;
@@ -13,6 +14,46 @@ use Illuminate\Validation\UnauthorizedException;
 
 class OrderController extends Controller
 {
+
+
+
+    public function filterbystatus()
+    {
+        $validator = Validator::make(request()->only('status', 'paid', 'start', 'limit'), [
+            'status' => 'string|in:pending,sent,received',
+            'paid' => 'boolean',
+            'start' => 'required|integer|min:0',
+            'limit' => 'required|integer|min:1'
+        ]);
+        if ($validator->fails()) {
+            return AppSP::apiResponse('validation error', $validator->errors(), 'errors', false, 422);
+        }
+        $orders = Order::with(['user' => function ($query) {
+            $query->select('id', 'name', 'phone');
+        }, 'products' => function ($query) {
+            $query->select('products.id', 'products.brand_name', 'products.brand_name_ar', 'quantity', 'order_product.price');
+            $query->withTrashed();
+        }, 'bill' => function ($query) {
+            $query->select('id', 'total', 'paid', 'order_id');
+        }]);
+        if (isset(request()->status))
+            $orders = $orders->where('status', request()->status);
+        if (isset(request()->paid)) {
+            $isPaid = request()->paid;
+            $orders = $orders->whereHas('bill', function ($billQuery) use ($isPaid) {
+                $billQuery->where('paid', $isPaid);
+            });
+        }
+        if (auth()->user()->role == 'user') {
+            $orders = $orders->where('user_id', auth()->user()->id)->get();
+        } else
+            $orders = $orders->get();
+        return AppSP::apiResponse('retrieved orders', $orders, 'orders');
+    }
+
+
+
+
     /**
      * Display a listing of the resource.
      */
@@ -83,14 +124,13 @@ class OrderController extends Controller
 
             return AppSP::apiResponse('order added');
         } catch (\Throwable $th) {
-            throw $th;
-            /*return AppSP::apiResponse(
+            return AppSP::apiResponse(
                 $th->getMessage(),
                 null,
                 'data',
                 false,
                 500
-            );*/
+            );
         }
     }
 

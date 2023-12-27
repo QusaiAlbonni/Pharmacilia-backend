@@ -15,12 +15,11 @@ return new class extends Migration
     {
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-
+            $table->foreignId('category_id')->constrained();
             $table->string('scientific_name')->nullable();
             $table->string('scientific_name_ar')->nullable();
             $table->string('brand_name');
             $table->string('brand_name_ar');
-            $table->enum('category', GlobalVariables::categories())->default('other');
             $table->string('manufacturer');
             $table->string('manufacturer_ar');
             $table->unsignedInteger('stock');
