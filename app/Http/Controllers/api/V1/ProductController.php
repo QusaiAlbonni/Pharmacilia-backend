@@ -47,6 +47,7 @@ class ProductController extends Controller
             $products = $products->map(function ($product) {
                 $product['isfavorite'] = $product->isfav();
                 $product['category_name'] = $product->category->category_name;
+                $product['category_name_ar'] = $product->category->category_name_ar;
                 return $product;
             });
             if (count($products) != 0) {
@@ -82,6 +83,7 @@ class ProductController extends Controller
             $products = $products->map(function ($product) {
                 $product['isfavorite'] = $product->isfav();
                 $product['category_name'] = $product->category->category_name;
+                $product['category_name_ar'] = $product->category->category_name_ar;
                 return $product;
             });
             return AppSP::apiResponse(
@@ -107,6 +109,7 @@ class ProductController extends Controller
             $products = $products->map(function ($product) {
                 $product['isfavorite'] = $product->isfav();
                 $product['category_name'] = $product->category->category_name;
+                $product['category_name_ar'] = $product->category->category_name_ar;
                 return $product;
             });
             return AppSP::apiResponse(
@@ -171,6 +174,7 @@ class ProductController extends Controller
         }]);
         $product['isfavorite'] = $product->isfav();
         $product['category_name'] = $product->category->category_name;
+        $product['category_name_ar'] = $product->category->category_name_ar;
         if (auth()->user()->role == 'user') {
             if (Carbon::parse($product->expiration_date)->lessThan(Carbon::now())) {
                 return AppSP::apiResponse('not found', null, "data", false, 404);

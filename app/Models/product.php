@@ -46,7 +46,8 @@ class product extends Model
         $query->when($filters['category'] ?? false, function ($query, $category) {
 
             $query->whereHas('category', function ($categoryQuery) use ($category) {
-                $categoryQuery->withTrashed()->where('category_name', '=', $category);
+                $categoryQuery->withTrashed()->where('category_name', '=', $category)
+                ->orwhere('category_name', '=', $category);
             });
         });
         $query->with('category');

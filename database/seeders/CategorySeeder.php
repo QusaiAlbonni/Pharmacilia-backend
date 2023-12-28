@@ -17,7 +17,8 @@ class CategorySeeder extends Seeder
         $cats = GlobalVariablesServiceProvider::categories();
         for ($i=0; $i < 7; $i++) {
             \App\Models\Category::create([
-                'category_name'=>$cats[$i]
+                'category_name'=>$cats[$i],
+                'category_name_ar'=>$cats[6 - $i]
             ]);
         }
     }
