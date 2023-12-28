@@ -44,6 +44,11 @@ class ProductController extends Controller
                 ->offset($request->start)
                 ->limit($request->limit)
                 ->get();
+            $products = $products->map(function ($product) {
+                $product['isfavorite'] = $product->isfav();
+                $product['category_name'] = $product->category->category_name;
+                return $product;
+            });
             if (count($products) != 0) {
                 return AppSP::apiResponse(
                     'Item recieved',
@@ -74,6 +79,11 @@ class ProductController extends Controller
                     $query->where('expiration_date', '>', now());
                 }
             )->get();
+            $products = $products->map(function ($product) {
+                $product['isfavorite'] = $product->isfav();
+                $product['category_name'] = $product->category->category_name;
+                return $product;
+            });
             return AppSP::apiResponse(
                 'products retrieved',
                 $products,
@@ -94,7 +104,11 @@ class ProductController extends Controller
             $products = product::orderBy('sales', 'desc')->with(['category' => function ($query) {
                 $query->withTrashed();
             }])->where('expiration_date', '>', now())->get();
-
+            $products = $products->map(function ($product) {
+                $product['isfavorite'] = $product->isfav();
+                $product['category_name'] = $product->category->category_name;
+                return $product;
+            });
             return AppSP::apiResponse(
                 'Item recieved depending on most sales',
                 $products,
@@ -155,6 +169,8 @@ class ProductController extends Controller
         $product = $product->load(['category' => function ($query) {
             $query->withTrashed();
         }]);
+        $product['isfavorite'] = $product->isfav();
+        $product['category_name'] = $product->category->category_name;
         if (auth()->user()->role == 'user') {
             if (Carbon::parse($product->expiration_date)->lessThan(Carbon::now())) {
                 return AppSP::apiResponse('not found', null, "data", false, 404);

@@ -17,7 +17,7 @@ class FavoriteController extends Controller
         return AppServiceProvider::apiResponse('retrieved favorite products', $favs, 'products');
     }
     public function isFavorite(product $product){
-        $isfav = auth()->user()->favorites->contains($product->id);
+        $isfav = $product->isfav();
         return AppServiceProvider::apiResponse('checked succesfully', $isfav, 'isfavorite');
     }
 }

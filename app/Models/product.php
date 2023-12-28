@@ -27,6 +27,9 @@ class product extends Model
         return $this->belongsToMany(User::class, 'product_user')->withTimestamps();
     }
 
+    public function isfav() : bool{
+        return auth()->user()->favorites->contains($this->id);
+    }
     public function scopeFilter($query, array $filters)
     {
         $query->when(auth()->user()->role == 'user', function ($query) {
