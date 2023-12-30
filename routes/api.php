@@ -6,6 +6,7 @@ use App\Http\Controllers\api\V1\CategoryController;
 use App\Http\Controllers\api\V1\FavoriteController;
 use App\Http\Controllers\api\V1\OrderController;
 use App\Http\Controllers\api\V1\ProductController;
+use App\Http\Controllers\api\V1\ReportsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -26,18 +27,17 @@ Route::middleware('api')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         //Searching
         Route::get('v1/products/search', [ProductController::class, 'search']);
-        //Show products byId
-        Route::get('/v1/products/{product}', [ProductController::class, 'show']);
 
         Route::get('/v1/product/mostCommon',[ProductController::class,'common']);
         //all prods
         Route::get('/v1/products', [ProductController::class, 'index']);
         //get all cats or one
-        Route::apiResource('/v1/categories', CategoryController::class)->except('store', 'destroy');
+        Route::apiResource('/v1/categories', CategoryController::class)->except('store', 'destroy', 'update');
 
         Route::get('/v1/bills/{bill}', [BillController::class, 'show']);
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
+            Route::get('/v1/products/report', [ReportsController::class, 'salesByMonth']);
             //add/delete/update prod
             Route::apiResource('/v1/products', ProductController::class)->except('show', 'index');
             // pay bill (change from unpaid to paid)
@@ -53,6 +53,7 @@ Route::middleware('api')->group(function () {
         });
         Route::get('/v1/orders/filterstatus', [OrderController::class, 'filterbystatus']);
         // NORMAL USERS / PHARMACISTS routes (users with user ability on their sanctum token)
+        Route::get('/v1/products/{product}', [ProductController::class, 'show']);
         Route::middleware('user')->group(function () {
             // add/delete an order
             Route::apiResource('/v1/orders', OrderController::class)->except('index', 'show', 'update');
