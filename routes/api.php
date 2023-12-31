@@ -35,9 +35,10 @@ Route::middleware('api')->group(function () {
         Route::apiResource('/v1/categories', CategoryController::class)->except('store', 'destroy', 'update');
 
         Route::get('/v1/bills/{bill}', [BillController::class, 'show']);
+        
+        Route::get('/v1/products/report', [ReportsController::class, 'salesByMonth']);
         // ADMIN WhereHouse owner routes (users with admin ability on their sanctum token)
         Route::middleware('admin')->group(function () {
-            Route::get('/v1/products/report', [ReportsController::class, 'salesByMonth']);
             //add/delete/update prod
             Route::apiResource('/v1/products', ProductController::class)->except('show', 'index');
             // pay bill (change from unpaid to paid)
