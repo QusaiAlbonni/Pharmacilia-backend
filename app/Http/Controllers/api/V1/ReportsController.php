@@ -64,4 +64,59 @@ class ReportsController extends Controller
         ];
         return AppSP::apiResponse('retrieved report', $finalData);
     }
+    public function userByMonth()
+    {
+
+        $lastTwelveMonthsData = [];
+
+        for ($i = 0; $i < 12; $i++) {
+            $currentMonth = now()->subMonths($i);
+
+            $totalSales = Order::where('user_id', auth()->user()->id)
+                ->whereMonth('created_at', '=', $currentMonth->format('m'))
+                ->whereYear('created_at', '=', $currentMonth->format('Y'))
+                ->with(['products' => function ($query) {
+                    $query->withTrashed();
+                }])
+                ->get()
+                ->map(function ($order) {
+                    return $order->products->map(function ($product) use ($order) {
+                        return [
+                            'product_id' => $product->id,
+                            'quantity' => $product->pivot->quantity,
+                            'total_sale' => $product->pivot->quantity * $product->pivot->price,
+                        ];
+                    });
+                })
+                ->flatten(1)
+                ->groupBy('product_id')
+                ->map(function ($sales) {
+                    return [
+                        'total_quantity' => $sales->sum('quantity'),
+                        'total_sales' => $sales->sum('total_sale'),
+                    ];
+                });
+
+            $totalSales = collect($totalSales
+                ->map(function ($sales, $product_id) {
+                    return [
+                        'product_id' => $product_id,
+                        'total_quantity' => $sales['total_quantity'],
+                        'total_sales' => $sales['total_sales'],
+                    ];
+                })
+                ->sortByDesc('total_sales')
+                ->values()
+                ->toArray());
+
+            $lastTwelveMonthsData[] = [
+                'month' => $currentMonth->format('Y-m'),
+                'total_sales' => $totalSales->sum('total_sales'),
+                'total_quantity' => $totalSales->sum('total_quantity'),
+                'products' => $totalSales,
+            ];
+        }
+
+        return AppSP::apiResponse('retrieved report', $lastTwelveMonthsData);
+    }
 }

@@ -55,9 +55,9 @@ Route::middleware('api')->group(function () {
         // NORMAL USERS / PHARMACISTS routes (users with user ability on their sanctum token)
         Route::get('/v1/products/{product}', [ProductController::class, 'show']);
         Route::middleware('user')->group(function () {
+            Route::get('/v1/orders/report', [ReportsController::class, 'userByMonth']);
             // add/delete an order
             Route::apiResource('/v1/orders', OrderController::class)->except('index', 'show', 'update');
-
             Route::post('/v1/favorites/{product}', [FavoriteController::class, 'toggleFavorite']);
             Route::get('/v1/favorites', [FavoriteController::class, 'index']);
             Route::get('/v1/products/{product}/isfav', [FavoriteController::class, 'isFavorite']);
