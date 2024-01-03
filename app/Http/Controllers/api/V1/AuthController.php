@@ -25,7 +25,9 @@ class AuthController extends Controller
                     'name' => 'required',
                     'email' => 'required|email|unique:users,email',
                     'phone' => 'required|digits:10|unique:users,phone',
+                    'fcm_token'=>'string',
                     'password' => 'required|min:8|confirmed'
+
                 ]
             );
 
@@ -39,7 +41,8 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'password' => Hash::make($request->password)
+                'password' => Hash::make($request->password),
+                'fcm_token'=>$request->fcm_token
             ]);
 
             return AppSP::apiResponse('User Created Successfully', $user->createToken("API TOKEN", ['user'])->plainTextToken, 'token', true);
@@ -62,7 +65,8 @@ class AuthController extends Controller
                 $request->all(),
                 [
                     'phone' => 'required|digits:10',
-                    'password' => 'required|min:8'
+                    'password' => 'required|min:8',
+                    'fcm_token'=>'required|string'
                 ]
             );
 
@@ -80,6 +84,7 @@ class AuthController extends Controller
 
 
             $user = User::where('phone', $request->phone)->first();
+            $user->update(['fcm_token'=>$request->fcm_token]);
             return AppSP::apiResponse('User Logged In Successfully', $user->createToken("API TOKEN", [$user->role])->plainTextToken, 'token');
             } catch (\Throwable $th) {
                 return response()->json([

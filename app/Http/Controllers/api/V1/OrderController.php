@@ -5,11 +5,13 @@ namespace App\Http\Controllers\api\V1;
 use App\Http\Requests\StoreOrderRequest;
 use App\Models\Bill;
 use App\Models\Order;
+use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use App\Models\product;
 use Illuminate\Http\Request;
 use app\Providers\AppServiceProvider as AppSP;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\UnauthorizedException;
 
 class OrderController extends Controller
@@ -122,7 +124,25 @@ class OrderController extends Controller
             $bill->total = $total;
             $order->bill()->save($bill);
 
-            return AppSP::apiResponse('order added');
+            $server_fcm_key = env('FCM_SERVER_KEY');
+            $fcm_tokens = User::where('role', 'admin')->pluck('fcm_token');
+            $fcm = Http::acceptJson()->withToken($server_fcm_key)->post(
+                'https://fcm.googleapis.com/fcm/send',
+                [
+                    'registration_ids' => $fcm_tokens,
+                    'notification' =>
+                    [
+                        'title' => 'New order!',
+                        'body' =>"A new Order was added by {$order->user->name}",
+                    ],
+                    'data'=>[
+                        'order_id'=>$order->id
+                    ]
+                ]
+
+            );
+
+            return AppSP::apiResponse('order added', $order, 'order');
         } catch (\Throwable $th) {
             return AppSP::apiResponse(
                 $th->getMessage(),
@@ -166,6 +186,23 @@ class OrderController extends Controller
         }
         $order->status = 'sent';
         $order->save();
+        $server_fcm_key = env('FCM_SERVER_KEY');
+        $fcm_token = User::where('id', $order->user_id)->value('fcm_token');
+        $fcm = Http::acceptJson()->withToken($server_fcm_key)->post(
+            'https://fcm.googleapis.com/fcm/send',
+            [
+                'to' => $fcm_token,
+                'notification' =>
+                [
+                    'title' => 'Your Order is on the way!',
+                    'body' =>"your Order has been sent and is on its way",
+                ],
+                'data'=>[
+                    'order_id'=>$order->id
+                ]
+            ]
+
+        );
         return AppSP::apiResponse('order sent', $order, 'order');
     }
     public function receive(Order $order)
@@ -175,6 +212,23 @@ class OrderController extends Controller
         }
         $order->status = 'received';
         $order->save();
+        $server_fcm_key = env('FCM_SERVER_KEY');
+        $fcm_token = User::where('id', $order->user_id)->value('fcm_token');
+        $fcm = Http::acceptJson()->withToken($server_fcm_key)->post(
+            'https://fcm.googleapis.com/fcm/send',
+            [
+                'to' => $fcm_token,
+                'notification' =>
+                [
+                    'title' => 'Your Order has been delivered',
+                    'body' =>"your Order has been succesfully delivered and received if you think its a mistake contact support",
+                ],
+                'data'=>[
+                    'order_id'=>$order->id
+                ]
+            ]
+
+        );
         foreach ($order->products as $product) {
             $product->increment('sales', $product->pivot->quantity);
         }
